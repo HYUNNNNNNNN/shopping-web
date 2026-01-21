@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-// 장바구니에 담길 상품 타입 정의
-interface CartItem {
+// export를 붙여서 다른 파일에서도 쓸 수 있게 합니다.
+export interface CartItem {
   id: number;
   name: string;
   price: number;
@@ -12,7 +12,8 @@ interface CartItem {
 
 interface CartState {
   items: CartItem[];
-  addItem: (product: any) => void;
+  // any -> CartItem으로 변경
+  addItem: (product: CartItem) => void; 
   removeItem: (id: number) => void;
   clearCart: () => void;
 }
@@ -22,9 +23,10 @@ export const useCartStore = create<CartState>()(
     (set, get) => ({
       items: [],
       
-      // 상품 담기 함수 (이미 있으면 수량만 +1, 없으면 새로 추가)
-      addItem: (product) => {
+      // product 타입을 CartItem으로 변경
+      addItem: (product: CartItem) => {
         const { items } = get();
+        // ... (나머지 로직은 그대로) ...
         const existingItem = items.find((item) => item.id === product.id);
 
         if (existingItem) {
@@ -36,21 +38,20 @@ export const useCartStore = create<CartState>()(
             ),
           });
         } else {
+          // 이미 quantity가 포함된 product가 들어오므로 그대로 추가
           set({
-            items: [...items, { ...product, quantity: 1 }],
+            items: [...items, product], 
           });
         }
       },
 
-      // 상품 삭제 함수
       removeItem: (id) =>
         set({ items: get().items.filter((item) => item.id !== id) }),
 
-      // 장바구니 비우기
       clearCart: () => set({ items: [] }),
     }),
     {
-      name: 'cart-storage', // 브라우저 로컬 스토리지에 저장될 이름
+      name: 'cart-storage',
     }
   )
 );
